@@ -1,6 +1,5 @@
 from random import randint
 from math import floor
-from openpyxl import load_workbook
 
 # n by n size
 n = 9
@@ -17,7 +16,7 @@ class pallette:
 
 class tile:
     def __init__(self):
-        self.options = {'1', '2', '3', '4', '5', '6', '7', '8', '9'}
+        self.options = {str(x) for x in range(1, n+1)}
         r = 0
         while len(board[r]) == n:
             r += 1
@@ -41,26 +40,43 @@ class tile:
                 if len(board[i][self.y].options) == 1:
                     board[i][self.y].collapse(list(board[i][self.y].options)[0])
 
-        chunk_x = floor(self.x / 3.0)
-        chunk_y = floor(self.y / 3.0)
+        chunk_x = floor(self.x / (n**0.5))
+        chunk_y = floor(self.y / (n**0.5))
         
-        for i in range(3):
-            for j in range(3):
-                if (chunk_x*3 + i != self.x or chunk_y*3 + j != self.y) and choice in board[chunk_x*3 + i][chunk_y*3 + j].options:
-                        board[chunk_x*3 + i][chunk_y*3 + j].options.remove(choice)
-                        if len(board[chunk_x*3 + i][chunk_y*3 + j].options) == 1:
-                            board[chunk_x*3 + i][chunk_y*3 + j].collapse(list(board[chunk_x*3 + i][chunk_y*3 + j].options)[0])
+        for i in range(int(n**0.5)):
+            for j in range(int(n**0.5)):
+                if (chunk_x*int(n**0.5) + i != self.x or chunk_y*int(n**0.5) + j != self.y) and choice in board[chunk_x*int(n**0.5) + i][chunk_y*int(n**0.5) + j].options:
+                        board[chunk_x*int(n**0.5) + i][chunk_y*int(n**0.5) + j].options.remove(choice)
+                        if len(board[chunk_x*int(n**0.5) + i][chunk_y*int(n**0.5) + j].options) == 1:
+                            board[chunk_x*int(n**0.5) + i][chunk_y*int(n**0.5) + j].collapse(list(board[chunk_x*int(n**0.5) + i][chunk_y*int(n**0.5) + j].options)[0])
+
 
 
 
 
 def show_board():
-    print('- - - - - - -')
-    for row in board:
-        for t in row:
-            print(t.options, end='\t')
-        print('\n')
-    print('- - - - - - -')
+    print('-'*(n*4+1))
+    for row in range((n*2-1)):
+        if row % 2 == 0:
+            for col in range((n*4+1)):
+                if col % 4 == 2:
+                    print(list(board[row//2][col//4].options)[0], end='')
+                elif col % int((n**0.5)*4) == 0:
+                    print('|', end='')
+                else:
+                    print(' ', end='')
+
+            
+        elif row % int((n**0.5)*2) == (n**0.5)*2-1:
+            for col in range((n*4+1)):
+                print('-', end='')
+
+        else:
+            print(('|'+' '*int((n**0.5)*4-1))*int(n**0.5)+'|', end='')
+
+        print('\n', end='')
+
+    print('-'*(n*4+1))
 
 def lowest_entropy():
     entropies = []
@@ -96,13 +112,3 @@ while True:
         break
 
 show_board()
-file = load_workbook('Sudoku Puzzle.xlsx')
-for row in range(len(board)):
-    for cell in range(len(board[row])):
-        file['Solution'].cell(row=row + 1, column=cell + 1).value = int(list(board[row][cell].options)[0])
-        
-        file['Puzzle'].cell(row=row + 1, column=cell + 1).value = ''
-        if randint(1, 10) > 5:
-            file['Puzzle'].cell(row=row + 1, column=cell + 1).value = int(list(board[row][cell].options)[0])
-
-file.save('Sudoku Puzzle.xlsx')
